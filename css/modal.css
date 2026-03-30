@@ -21,8 +21,8 @@
 
 @font-face {
     font-family: 'Mulish';
-    src: url(../font/Mulish-Regular-optimized.woff2);
-    font-weight: 400;
+    src: url(../font/Mulish-Light.woff2);
+    font-weight: 300;
     font-display: swap;
 }
 
