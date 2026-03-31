@@ -56,7 +56,7 @@
         <p>17 йиллик тажриба асосида. <br> АҚШ ва Япония инвесторидан</p>
       </div>
 
-      <button class="hero__btn webinar-cta">
+      <button class="hero__btn webinar-cta registerBtn">
         <a href="https://t.me/+0lelGtIx1BtmYzQy">
           Каналга қўшилиш
         </a>
@@ -102,7 +102,7 @@
         </li>
       </ul>
 
-      <button class="hero__btn webinar-cta">
+      <button class="hero__btn webinar-cta registerBtn">
         <a href="https://t.me/+0lelGtIx1BtmYzQy">
           Каналга қўшилиш
         </a>
@@ -111,11 +111,10 @@
   </section>
 
 
-  <script src="../js/app.js"></script>
-
   <script defer>
-   const btn=document.querySelectorAll(".hero__btn");btn.addEventListener("click",(function(){window.location.href="https://t.me/+0lelGtIx1BtmYzQy"}));
-  </script>
+    document.addEventListener("DOMContentLoaded", (() => { document.querySelectorAll(".registerBtn").forEach((e => { e.addEventListener("click", (() => { "function" == typeof fbq && fbq("track", "CompleteRegistration") })) })) }));
+</script>
+  <script src="../js/app.js"></script>
   <!-- Meta Pixel Code -->
   <script defer>
     !function (f, b, e, v, n, t, s) {

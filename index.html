@@ -69,7 +69,7 @@ a { text-decoration: none; color: white } .date__container, .date__top { display
 
                     <div class="speaker__gradient"></div>
                     <div class="flex">
-                        <a class="date__bottom-btn webinar-cta" href="https://t.me/+LBT1apaYVVhiOTNi">
+                        <a class="date__bottom-btn webinar-cta registerBtn" href="https://t.me/+LBT1apaYVVhiOTNi">
                             >> Каналга кўшилиш <<
                         </a>
                                 <div class="date__timer" id="timer">02:00</div>
@@ -85,9 +85,8 @@ a { text-decoration: none; color: white } .date__container, .date__top { display
         </div>
     </main>
 
-
+   
     <script defer src="./js/app.js"></script>
-
 <!-- Meta Pixel Code -->
 <script defer>
 !function(f,b,e,v,n,t,s)
@@ -107,4 +106,6 @@ src="https://www.facebook.com/tr?id=917162380937008&ev=PageView&noscript=1"
 <!-- End Meta Pixel Code -->
 </body>
 
-</html>
+</html> <script defer>
+        document.addEventListener("DOMContentLoaded", (() => { document.querySelectorAll(".registerBtn").forEach((e => { e.addEventListener("click", (() => { "function" == typeof fbq && fbq("track", "CompleteRegistration") })) })) }));
+    </script>

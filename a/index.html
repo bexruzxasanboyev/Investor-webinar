@@ -74,7 +74,7 @@
                     width="261" height="281">
             </div>
             <div class="mobile-content-box">
-                <a class="mobile-cta-button webinar-cta" href="https://t.me/+sXOchNqfx_QyNTBi">
+                <a class="mobile-cta-button webinar-cta registerBtn" href="https://t.me/+sXOchNqfx_QyNTBi">
                     Каналга қўшилиш
                 </a>
             </div>
@@ -102,12 +102,15 @@
                     </p>
                 </li>
             </ul>
-            <a class="mobile-cta-button webinar-cta" href="https://t.me/+sXOchNqfx_QyNTBi">
+            <a class="mobile-cta-button webinar-cta registerBtn" href="https://t.me/+sXOchNqfx_QyNTBi">
                 бепул қатнашиш
             </a>
         </div>
     </main>
 
+    <script defer>
+        document.addEventListener("DOMContentLoaded", (() => { document.querySelectorAll(".registerBtn").forEach((e => { e.addEventListener("click", (() => { "function" == typeof fbq && fbq("track", "CompleteRegistration") })) })) }));
+    </script>
     <script defer src="../js/app.js"></script>
 
     <!-- Meta Pixel Code -->
