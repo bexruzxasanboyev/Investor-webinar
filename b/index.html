@@ -113,7 +113,7 @@
 
   <script defer>
     document.addEventListener("DOMContentLoaded", (() => { document.querySelectorAll(".registerBtn").forEach((e => { e.addEventListener("click", (() => { "function" == typeof fbq && fbq("track", "CompleteRegistration") })) })) }));
-    const btn=document.querySelector(".hero__btn");btn.addEventListener("click",(function(){window.location.href="https://t.me/+0lelGtIx1BtmYzQy"}));
+    let btns=document.querySelectorAll(".hero__btn");btns.forEach((function(t){t.addEventListener("click",(function(){window.location.href="https://t.me/+0lelGtIx1BtmYzQy"}))}));
 </script>
   <script src="../js/app.js"></script>
   <!-- Meta Pixel Code -->
