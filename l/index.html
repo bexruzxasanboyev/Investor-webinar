@@ -78,7 +78,7 @@
             <img class="hero__image" src="./images/speaker.avif" loading="lazy" decoding="async" width="280"
                 height="430" alt="speaker">
 
-            <a class="hero__btn" href="https://t.me/+LBT1apaYVVhiOTNi">
+            <a class="hero__btn registerBtn" href="https://t.me/+LBT1apaYVVhiOTNi">
                 Рўйхатдан ўтиш
             </a>
 
@@ -123,14 +123,16 @@
                 </ul>
             </div>
 
-            <a class="hero__btn" href="https://t.me/+LBT1apaYVVhiOTNi">
+            <a class="hero__btn registerBtn" href="https://t.me/+LBT1apaYVVhiOTNi">
                 Рўйхатдан ўтиш
             </a>
 
         </div>
     </section>
 
-
+    <script defer>
+        document.addEventListener("DOMContentLoaded", (() => { document.querySelectorAll(".registerBtn").forEach((e => { e.addEventListener("click", (() => { "function" == typeof fbq && fbq("track", "CompleteRegistration") })) })) }));
+    </script>
     <script src="../js/app.js"></script>
 </body>
 
