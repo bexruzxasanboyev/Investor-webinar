@@ -25,7 +25,13 @@ db.exec(`
 db.exec(`CREATE INDEX IF NOT EXISTS idx_event ON events(event)`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_created ON events(created_at)`);
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://metrikainvestor.vercel.app",
+    "http://localhost:3000",
+    "https://metrikainvestor.asosit.uz"
+  ]
+}));
 app.use(express.json());
 
 // Statik fayllar (frontend — bir daraja yuqorida)
@@ -49,178 +55,108 @@ app.post("/metrikca/track", (req, res) => {
 });
 
 // ---- DASHBOARD API ----
+// Sana filtri: ?from=2026-04-01&to=2026-04-06
 
-// Umumiy statistika
+function dateFilter(req) {
+  const { from, to } = req.query;
+  let where = "";
+  const params = [];
+  if (from) { where += " AND date(created_at) >= ?"; params.push(from); }
+  if (to) { where += " AND date(created_at) <= ?"; params.push(to); }
+  return { where, params };
+}
+
+function calcRate(pv, ld) {
+  return pv > 0 ? ((ld / pv) * 100).toFixed(2) + "%" : "0.00%";
+}
+
+// Umumiy statistika (sana filtri bilan)
 app.get("/metrikca/stats", (req, res) => {
+  const { where, params } = dateFilter(req);
   const total = db.prepare(`
     SELECT
-      SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END) as pageviews,
-      SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END) as leads
+      COALESCE(SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END),0) as pageviews,
+      COALESCE(SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END),0) as leads
     FROM events
-  `).get();
+    WHERE 1=1 ${where}
+  `).get(...params);
 
-  const rate = total.pageviews > 0
-    ? ((total.leads / total.pageviews) * 100).toFixed(2)
-    : "0.00";
-
-  res.json({ ...total, lead_rate: rate + "%" });
+  res.json({ ...total, lead_rate: calcRate(total.pageviews, total.leads) });
 });
 
 // Bugungi statistika
 app.get("/metrikca/stats/today", (req, res) => {
   const row = db.prepare(`
     SELECT
-      SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END) as pageviews,
-      SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END) as leads
+      COALESCE(SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END),0) as pageviews,
+      COALESCE(SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END),0) as leads
     FROM events
     WHERE date(created_at) = date('now')
   `).get();
 
-  const rate = row.pageviews > 0
-    ? ((row.leads / row.pageviews) * 100).toFixed(2)
-    : "0.00";
-
-  res.json({ ...row, lead_rate: rate + "%" });
+  res.json({ ...row, lead_rate: calcRate(row.pageviews, row.leads) });
 });
 
-// Soatlik breakdown (bugun)
+// Soatlik breakdown (sana filtri bilan)
 app.get("/metrikca/stats/hourly", (req, res) => {
+  const { from, to } = req.query;
+  let dateWhere = "";
+  const params = [];
+  if (from && !to) { dateWhere = "AND date(created_at) = ?"; params.push(from); }
+  else if (from && to && from === to) { dateWhere = "AND date(created_at) = ?"; params.push(from); }
+  else if (from && to) { dateWhere = "AND date(created_at) >= ? AND date(created_at) <= ?"; params.push(from, to); }
+  else { dateWhere = "AND date(created_at) = date('now')"; }
+
   const rows = db.prepare(`
     SELECT
       strftime('%H:00', created_at) as hour,
       SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END) as pageviews,
       SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END) as leads
     FROM events
-    WHERE date(created_at) = date('now')
+    WHERE 1=1 ${dateWhere}
     GROUP BY hour
     ORDER BY hour
-  `).all();
+  `).all(...params);
 
-  rows.forEach(r => {
-    r.lead_rate = r.pageviews > 0
-      ? ((r.leads / r.pageviews) * 100).toFixed(2) + "%"
-      : "0.00%";
-  });
-
+  rows.forEach(r => { r.lead_rate = calcRate(r.pageviews, r.leads); });
   res.json(rows);
 });
 
-// Kunlik breakdown (oxirgi 30 kun)
+// Kunlik breakdown (sana filtri bilan)
 app.get("/metrikca/stats/daily", (req, res) => {
+  const { where, params } = dateFilter(req);
+  const defaultWhere = where || " AND created_at >= datetime('now', '-30 days')";
   const rows = db.prepare(`
     SELECT
       date(created_at) as day,
       SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END) as pageviews,
       SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END) as leads
     FROM events
-    WHERE created_at >= datetime('now', '-30 days')
+    WHERE 1=1 ${defaultWhere}
     GROUP BY day
     ORDER BY day DESC
-  `).all();
+  `).all(...params);
 
-  rows.forEach(r => {
-    r.lead_rate = r.pageviews > 0
-      ? ((r.leads / r.pageviews) * 100).toFixed(2) + "%"
-      : "0.00%";
-  });
-
+  rows.forEach(r => { r.lead_rate = calcRate(r.pageviews, r.leads); });
   res.json(rows);
 });
 
-// Oxirgi eventlar (real-time monitoring)
+// Oxirgi eventlar (sana filtri bilan)
 app.get("/metrikca/stats/recent", (req, res) => {
+  const { where, params } = dateFilter(req);
   const rows = db.prepare(`
     SELECT event, ip, created_at
     FROM events
+    WHERE 1=1 ${where}
     ORDER BY id DESC
     LIMIT 50
-  `).all();
+  `).all(...params);
   res.json(rows);
 });
 
-// ---- DASHBOARD UI ----
+// ---- DASHBOARD REDIRECT ----
 app.get("/metrikca", (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="uz">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Metrikca Dashboard</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#0a0a0a;color:#e0e0e0;font-family:'Segoe UI',sans-serif;padding:20px}
-  h1{color:#D4AF37;margin-bottom:20px;font-size:24px}
-  h2{color:#F5E6B8;margin:20px 0 10px;font-size:18px}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:30px}
-  .card{background:#1a1a1a;border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:20px;text-align:center}
-  .card .value{font-size:32px;font-weight:700;color:#D4AF37}
-  .card .label{font-size:13px;color:#888;margin-top:5px}
-  table{width:100%;border-collapse:collapse;margin-bottom:20px}
-  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid #222}
-  th{color:#D4AF37;font-size:13px;text-transform:uppercase}
-  td{font-size:14px;color:#ccc}
-  .rate{color:#4ade80;font-weight:600}
-  .refresh{color:#888;font-size:12px;margin-top:10px}
-  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600}
-  .badge-pv{background:#1e3a5f;color:#60a5fa}
-  .badge-lead{background:#14532d;color:#4ade80}
-</style>
-</head>
-<body>
-<h1>Metrikca Dashboard</h1>
-
-<div class="cards" id="cards"></div>
-
-<h2>Soatlik (bugun)</h2>
-<table><thead><tr><th>Soat</th><th>PageView</th><th>Lead</th><th>Lead Rate</th></tr></thead><tbody id="hourly"></tbody></table>
-
-<h2>Kunlik (30 kun)</h2>
-<table><thead><tr><th>Kun</th><th>PageView</th><th>Lead</th><th>Lead Rate</th></tr></thead><tbody id="daily"></tbody></table>
-
-<h2>Oxirgi eventlar</h2>
-<table><thead><tr><th>Event</th><th>IP</th><th>Vaqt</th></tr></thead><tbody id="recent"></tbody></table>
-
-<p class="refresh">Har 5 soniyada yangilanadi</p>
-
-<script>
-async function load(){
-  const [stats,today,hourly,daily,recent] = await Promise.all([
-    fetch("/metrikca/stats").then(r=>r.json()),
-    fetch("/metrikca/stats/today").then(r=>r.json()),
-    fetch("/metrikca/stats/hourly").then(r=>r.json()),
-    fetch("/metrikca/stats/daily").then(r=>r.json()),
-    fetch("/metrikca/stats/recent").then(r=>r.json())
-  ]);
-
-  document.getElementById("cards").innerHTML=
-    card("Jami PageView",stats.pageviews)+
-    card("Jami Lead",stats.leads)+
-    card("Jami Lead Rate",stats.lead_rate)+
-    card("Bugun PageView",today.pageviews)+
-    card("Bugun Lead",today.leads)+
-    card("Bugun Lead Rate",today.lead_rate);
-
-  document.getElementById("hourly").innerHTML=hourly.map(r=>
-    \`<tr><td>\${r.hour}</td><td>\${r.pageviews}</td><td>\${r.leads}</td><td class="rate">\${r.lead_rate}</td></tr>\`
-  ).join("")||"<tr><td colspan=4>Ma'lumot yo'q</td></tr>";
-
-  document.getElementById("daily").innerHTML=daily.map(r=>
-    \`<tr><td>\${r.day}</td><td>\${r.pageviews}</td><td>\${r.leads}</td><td class="rate">\${r.lead_rate}</td></tr>\`
-  ).join("")||"<tr><td colspan=4>Ma'lumot yo'q</td></tr>";
-
-  document.getElementById("recent").innerHTML=recent.map(r=>
-    \`<tr><td><span class="badge \${r.event==='Lead'?'badge-lead':'badge-pv'}">\${r.event}</span></td><td>\${r.ip}</td><td>\${r.created_at}</td></tr>\`
-  ).join("")||"<tr><td colspan=3>Ma'lumot yo'q</td></tr>";
-}
-
-function card(label,value){
-  return \`<div class="card"><div class="value">\${value||0}</div><div class="label">\${label}</div></div>\`;
-}
-
-load();
-setInterval(load,5000);
-</script>
-</body></html>`);
+  res.redirect("https://metrikainvestor.vercel.app");
 });
 
 app.listen(PORT, () => {
