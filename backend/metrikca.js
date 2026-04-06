@@ -28,6 +28,7 @@ db.exec(`CREATE INDEX IF NOT EXISTS idx_created ON events(created_at)`);
 app.use(cors({
   origin: [
     "https://metrikainvestor.vercel.app",
+    "https://investor-webiner.vercel.app",
     "http://localhost:3000",
     "https://metrikainvestor.asosit.uz"
   ]
