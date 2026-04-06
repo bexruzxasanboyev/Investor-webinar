@@ -79,12 +79,18 @@ app.get("/metrikca/stats", (req, res) => {
   const total = db.prepare(`
     SELECT
       COALESCE(SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END),0) as pageviews,
-      COALESCE(SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END),0) as leads
+      COALESCE(SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END),0) as leads,
+      COALESCE(COUNT(DISTINCT CASE WHEN event='PageView' THEN ip END),0) as unique_pageviews,
+      COALESCE(COUNT(DISTINCT CASE WHEN event='Lead' THEN ip END),0) as unique_leads
     FROM events
     WHERE 1=1 ${where}
   `).get(...params);
 
-  res.json({ ...total, lead_rate: calcRate(total.pageviews, total.leads) });
+  res.json({
+    ...total,
+    lead_rate: calcRate(total.pageviews, total.leads),
+    unique_lead_rate: calcRate(total.unique_pageviews, total.unique_leads)
+  });
 });
 
 // Bugungi statistika
@@ -92,12 +98,18 @@ app.get("/metrikca/stats/today", (req, res) => {
   const row = db.prepare(`
     SELECT
       COALESCE(SUM(CASE WHEN event='PageView' THEN 1 ELSE 0 END),0) as pageviews,
-      COALESCE(SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END),0) as leads
+      COALESCE(SUM(CASE WHEN event='Lead' THEN 1 ELSE 0 END),0) as leads,
+      COALESCE(COUNT(DISTINCT CASE WHEN event='PageView' THEN ip END),0) as unique_pageviews,
+      COALESCE(COUNT(DISTINCT CASE WHEN event='Lead' THEN ip END),0) as unique_leads
     FROM events
     WHERE date(created_at) = date('now')
   `).get();
 
-  res.json({ ...row, lead_rate: calcRate(row.pageviews, row.leads) });
+  res.json({
+    ...row,
+    lead_rate: calcRate(row.pageviews, row.leads),
+    unique_lead_rate: calcRate(row.unique_pageviews, row.unique_leads)
+  });
 });
 
 // Soatlik breakdown (sana + soat filtri bilan)
