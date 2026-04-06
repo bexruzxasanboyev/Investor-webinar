@@ -76,10 +76,24 @@
 
     <script defer>
         document.addEventListener("DOMContentLoaded", () => {
+            // Metrikca: PageView
+            fetch("/metrikca/track", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ event: "PageView" })
+            }).catch(() => {});
+
+            // registerBtn click -> Lead + redirect
             document.querySelectorAll(".registerBtn").forEach((e) => {
                 e.addEventListener("click", (ev) => {
                     ev.preventDefault();
                     "function" == typeof fbq && fbq("track", "CompleteRegistration");
+                    // Metrikca: Lead
+                    fetch("/metrikca/track", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ event: "Lead" })
+                    }).catch(() => {});
                     window.open("https://t.me/+LBT1apaYVVhiOTNi", "_parent");
                 });
             });
