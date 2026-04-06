@@ -55,7 +55,7 @@
 
                     <div class="speaker__gradient"></div>
                     <div class="flex">
-                        <a class="date__bottom-btn webinar-cta registerBtn" href="https://t.me/+LBT1apaYVVhiOTNi">
+                        <a class="date__bottom-btn webinar-cta" href="https://t.me/+LBT1apaYVVhiOTNi">
                             >> Каналга кўшилиш << </a>
                                 <p class="date__text">Равкат Бусаков 18 йиллик Америка <br> ва Япония тажрибасига эга
                                     инвестор</p>
@@ -75,26 +75,7 @@
 
     <script defer>
         document.addEventListener("DOMContentLoaded", (() => {
-            document.querySelectorAll(".registerBtn").forEach((e => { e.addEventListener("click", ((ev) => { if (!e.closest("a")) { ev.preventDefault(); "function" == typeof fbq && fbq("track", "CompleteRegistration"); window.open("https://t.me/+LBT1apaYVVhiOTNi", "_blank"); } else { "function" == typeof fbq && fbq("track", "CompleteRegistration"); } })) }));
-
-            const timerEl = document.getElementById("timer");
-            if (timerEl) {
-                let totalSeconds = 2 * 60;
-                const tick = () => {
-                    const m = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-                    const s = String(totalSeconds % 60).padStart(2, "0");
-                    timerEl.textContent = m + ":" + s;
-                    if (totalSeconds <= 0) { clearInterval(interval); return; }
-                    totalSeconds--;
-                };
-                tick();
-                const interval = setInterval(tick, 1000);
-            }
-
-            setTimeout(() => {
-                "function" == typeof fbq && fbq("track", "CompleteRegistration");
-                window.location.href = "https://t.me/+LBT1apaYVVhiOTNi";
-            }, 10000);
+            document.querySelectorAll(".registerBtn").forEach((e => { e.addEventListener("click", ((ev) => { if (!e.closest("a")) { ev.preventDefault(); "function" == typeof fbq && fbq("track", "CompleteRegistration"); window.open("https://t.me/+LBT1apaYVVhiOTNi", "_"); } else { "function" == typeof fbq && fbq("track", "CompleteRegistration"); } })) }));
         }));
     </script>
 
