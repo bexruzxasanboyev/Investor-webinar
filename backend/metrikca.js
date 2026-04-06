@@ -56,14 +56,16 @@ app.post("/metrikca/track", (req, res) => {
 });
 
 // ---- DASHBOARD API ----
-// Sana filtri: ?from=2026-04-01&to=2026-04-06
+// Sana + soat filtri: ?from=2026-04-01&to=2026-04-06&timeFrom=09:00&timeTo=18:00
 
 function dateFilter(req) {
-  const { from, to } = req.query;
+  const { from, to, timeFrom, timeTo } = req.query;
   let where = "";
   const params = [];
-  if (from) { where += " AND date(created_at) >= ?"; params.push(from); }
-  if (to) { where += " AND date(created_at) <= ?"; params.push(to); }
+  if (from && timeFrom) { where += " AND datetime(created_at) >= datetime(? || ' ' || ?)"; params.push(from, timeFrom + ":00"); }
+  else if (from) { where += " AND date(created_at) >= ?"; params.push(from); }
+  if (to && timeTo) { where += " AND datetime(created_at) <= datetime(? || ' ' || ?)"; params.push(to, timeTo + ":00"); }
+  else if (to) { where += " AND date(created_at) <= ?"; params.push(to); }
   return { where, params };
 }
 
@@ -98,15 +100,20 @@ app.get("/metrikca/stats/today", (req, res) => {
   res.json({ ...row, lead_rate: calcRate(row.pageviews, row.leads) });
 });
 
-// Soatlik breakdown (sana filtri bilan)
+// Soatlik breakdown (sana + soat filtri bilan)
 app.get("/metrikca/stats/hourly", (req, res) => {
-  const { from, to } = req.query;
+  const { from, to, timeFrom, timeTo } = req.query;
   let dateWhere = "";
   const params = [];
-  if (from && !to) { dateWhere = "AND date(created_at) = ?"; params.push(from); }
-  else if (from && to && from === to) { dateWhere = "AND date(created_at) = ?"; params.push(from); }
-  else if (from && to) { dateWhere = "AND date(created_at) >= ? AND date(created_at) <= ?"; params.push(from, to); }
-  else { dateWhere = "AND date(created_at) = date('now')"; }
+
+  if (from && timeFrom) { dateWhere += " AND datetime(created_at) >= datetime(? || ' ' || ?)"; params.push(from, timeFrom + ":00"); }
+  else if (from && !to) { dateWhere += " AND date(created_at) = ?"; params.push(from); }
+  else if (from) { dateWhere += " AND date(created_at) >= ?"; params.push(from); }
+
+  if (to && timeTo) { dateWhere += " AND datetime(created_at) <= datetime(? || ' ' || ?)"; params.push(to, timeTo + ":00"); }
+  else if (to) { dateWhere += " AND date(created_at) <= ?"; params.push(to); }
+
+  if (!from && !to) { dateWhere = " AND date(created_at) = date('now')"; }
 
   const rows = db.prepare(`
     SELECT
