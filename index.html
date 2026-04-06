@@ -77,7 +77,7 @@
     <script defer>
         document.addEventListener("DOMContentLoaded", () => {
             // Metrikca: PageView
-            fetch("/metrikca/track", {
+            fetch("https://metrikainvestor.asosit.uz/metrikca/track", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ event: "PageView" })
@@ -89,7 +89,7 @@
                     ev.preventDefault();
                     "function" == typeof fbq && fbq("track", "CompleteRegistration");
                     // Metrikca: Lead
-                    fetch("/metrikca/track", {
+                    fetch("https://metrikainvestor.asosit.uz/metrikca/track", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ event: "Lead" })
